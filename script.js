@@ -13,23 +13,18 @@ function Gameboard() {
     }
   }
 
-  // This will be the method of getting the entire board that our
-  // UI will eventually need to render it.
+  // This will be the method of getting the entire board that our UI will eventually need to render it.
   const getBoard = () => board;
 
   const selectCell = (row, column, player) => {
-  
-    // if there is no token in the selected square, then assign a cell to it.
-    if( board[row][column].getValue() === 0 ) {
+    if(board[row][column].getValue() === '' ) {
       board[row][column].addToken(player);
-      return 1;
+      return true;
     } else {
        console.log("cell is filled, choose another cell");
-       return 0;
+       return false;
     }
-    
   };
-  
   // This method will be used to print our board to the console.
   // It is helpful to see what the board looks like after each turn as we play,
   // but we won't need it after we build our UI
@@ -43,14 +38,12 @@ function Gameboard() {
   return { getBoard, selectCell, printBoard };
 }
 
-/*
-** A Cell represents one "square" on the board and can have one of
-** 0: no token is in the square,
-** 1: Player One's token,
-** 2: Player 2's token
-*/
+//  A Cell represents one "square" on the board and can have one of
+//  0: no token is in the square,
+//  1: Player One's token,
+//  2: Player 2's token
 function Cell() {
-  let value = 0;
+  let value = '';
 
   // Accept a player's token to change the value of the cell
   const addToken = (player) => {
@@ -66,12 +59,12 @@ function Cell() {
   };
 }
 
-/* 
-** The GameController IEFE will be responsible for controlling the 
-** flow and state of the game's turns, as well as whether
-** anybody has won the game
-*/
-const game = (function GameController(
+
+//  The GameController IEFE will be responsible for controlling the 
+//  flow and state of the game's turns, as well as whether
+//  anybody has won the game
+
+function GameController(
   playerOneName = "Player One",
   playerTwoName = "Player Two"
 ) {
@@ -80,11 +73,11 @@ const game = (function GameController(
   const players = [
     {
       name: playerOneName,
-      token: 1
+      token: 'x'
     },
     {
       name: playerTwoName,
-      token: 2
+      token: 'o'
     }
   ];
 
@@ -93,6 +86,7 @@ const game = (function GameController(
   const switchPlayerTurn = () => {
     activePlayer = activePlayer === players[0] ? players[1] : players[0];
   };
+
   const getActivePlayer = () => activePlayer;
 
   const printNewRound = () => {
@@ -101,24 +95,72 @@ const game = (function GameController(
   };
 
   const playRound = (row, column) => {
-    // Add a token to the selected cell
-    console.log(
-      `adding ${getActivePlayer().name}'s token into row ${row} & column ${column}...`
-    );
 
-    // const availableCells = board.getBoard().filter((row) => row[column].getValue() === 0).map(row => row[column]);
-
-    const switchBoolean = board.selectCell(row, column, getActivePlayer().token);
-
-    // const updatedAvailableCells = board.getBoard().filter((row) => row[column].getValue() === 0).map(row => row[column]);
-
-    /*  This is where we would check for a winner and handle that logic,
-        such as a win message. */
-
-    // Switch player turn
-    if (switchBoolean) {
+    // add tokens if the move is valid then switch player.
+    const validMove = board.selectCell(row, column, getActivePlayer().token);
+    if (validMove) {
       switchPlayerTurn();
     }
+    
+    /*  This is where we would check for a winner and handle that logic,
+    such as a win message. */
+
+    // get values of the board to do the comparison for win conditions
+    const testBoard = board.getBoard();
+    win = []
+    for(i = 0; i < 3; i++) {
+      for(j = 0; j < 3; j++) {
+        win.push(testBoard[i][j].getValue())
+      }
+    }
+
+    // vertical 
+    for( let i = 0; i <= 2; i++ ) {
+      if (win[0 + i] + win[3 + i] + win[6 + i] === 'ooo') {
+        console.log("win OOO!!!");
+        ScreenController();
+      }
+      if (win[0 + i] + win[3 + i] + win[6 + i] === 'xxx') {
+        console.log("win XXX!!!");
+      }
+    }
+
+    // horizontal
+    for( let i = 0, j = 0; i <= 2; i++ ) {
+      if (win[0 + j] + win[1 + j] + win[2 + j] === 'ooo') {
+        console.log("win OOO!!!");
+      }
+      if (win[0 + j] + win[1 + j] + win[2 + j] === 'xxx') {
+        console.log("win XXX!!!");
+      }
+      j = j + 3;
+    }
+
+    // cross
+    for (let i = 0, j = 0; i <= 1; i++) {
+      if ( win[0 + j] + win[4] + win[8 - j] === 'ooo') {
+        console.log("cross win for OOO");
+      }
+      if ( win[0 + j] + win[4] + win[8 - j] === 'xxx') {
+        console.log("cross win for XXX");
+      }
+      j = 6;
+    }
+
+    // tie
+    emptyCount = 0;
+    for ( let i = 0; i < win.length; i++ ) {
+      if( win[i] === '') {
+        emptyCount += 1;
+      }
+    }
+    if (emptyCount == 0) {
+      console.log("tie")
+    }
+    //  const availableCells = testBoard.filter((row) => row[column].getValue() === '').map(row => row[column]);
+    //  console.log(availableCells.length)
+
+
     printNewRound();
   };
 
@@ -129,6 +171,69 @@ const game = (function GameController(
   // getActivePlayer for the UI version, so I'm revealing it now
   return {
     playRound,
-    getActivePlayer
+    getActivePlayer,
+    getBoard: board.getBoard,
   };
-})();
+};
+
+function ScreenController() {
+  const game = GameController();
+  const playerTurnDiv = document.querySelector('.turn');
+  const boardDiv = document.querySelector('.board');
+
+  const updateScreen = () => {
+    // clear the board
+    boardDiv.textContent = "";
+
+    // get the newest version of the board and player turn
+    const board = game.getBoard();
+    const activePlayer = game.getActivePlayer();
+
+    // Display player's turn
+    playerTurnDiv.textContent = `${activePlayer.name}'s turn...`
+
+    // Render board squares
+    let i = 0;
+    board.forEach(row => {
+      row.forEach((cell, index) => {
+        // Anything clickable should be a button!!
+        const cellButton = document.createElement("button");
+        cellButton.classList.add("cell");
+        // Create a data attribute to identify the column
+        // This makes it easier to pass into our `playRound` function 
+        cellButton.dataset.column = index;
+        cellButton.dataset.row = i;
+        if(index === 2) {
+          i++;
+        }
+
+        
+        
+        cellButton.textContent = cell.getValue();
+        boardDiv.appendChild(cellButton);
+      })
+    })
+  }
+
+  // Add event listener for the board
+  function clickHandlerBoard(e) {
+    const selectedColumn = e.target.dataset.column;
+    const selectedRow = e.target.dataset.row;
+    // Make sure I've clicked a column and not the gaps in between
+    if (!selectedColumn) return;
+    
+    game.playRound(selectedRow, selectedColumn);
+    updateScreen();
+  }
+  boardDiv.addEventListener("click", clickHandlerBoard);
+
+  // Initial render
+  updateScreen();
+
+  // delete html elements and call update screen again when a win or tie condition is met
+  
+
+  // We don't need to return anything from this module because everything is encapsulated inside this screen controller.
+}
+
+ScreenController();
