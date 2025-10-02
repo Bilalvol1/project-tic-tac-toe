@@ -1,11 +1,27 @@
-// The Gameboard represents the state of the board
-// Each equare holds a Cell
-// and we expose a selectCell method to be able to add Cells to squares
+function Cell() {
+
+  let value = '';
+
+  const addPlayerToken = (player) => {
+    value = player;
+  };
+
+  const getValue = () => value;
+
+  return {
+    addPlayerToken,
+    getValue,
+  };
+}
+
 function Gameboard() {
+
   const rows = 3;
   const columns = 3;
   const board = [];
 
+  // creates a board that inserts adds tree arrays and add three elements 
+  // to each array
   for (let i = 0; i < rows; i++) {
     board[i] = [];
     for (let j = 0; j < columns; j++) {
@@ -13,67 +29,47 @@ function Gameboard() {
     }
   }
 
-  // This will be the method of getting the entire board that our UI will eventually need to render it.
+  // used for UI for rendering and not being able to change the board array 
+  // by making a private variable
   const getBoard = () => board;
 
-  const selectCell = (row, column, player) => {
+  // adds token to the board by first checking if the cell is empty
+  const addToken = (row, column, player) => {
     if(board[row][column].getValue() === '' ) {
-      board[row][column].addToken(player);
+      board[row][column].addPlayerToken(player);
       return true;
     } else {
-       console.log("cell is filled, choose another cell");
+       console.log("Invalid Move");
        return false;
     }
   };
-  // This method will be used to print our board to the console.
-  // It is helpful to see what the board looks like after each turn as we play,
-  // but we won't need it after we build our UI
+
+  // prints board in the console, to be removed after UI is done
   const printBoard = () => {
-    const boardWithCellValues = board.map((row) => row.map((cell) => cell.getValue()))
+    const boardWithCellValues = board.map((row) => row.map((cell) => cell.getValue()));
     console.log(boardWithCellValues);
   };
 
-  // Here, we provide an interface for the rest of our
-  // application to interact with the board
-  return { getBoard, selectCell, printBoard };
+  return { 
+    getBoard, 
+    addToken, 
+    printBoard };
 }
-
-//  A Cell represents one "square" on the board and can have one of
-//  0: no token is in the square,
-//  1: Player One's token,
-//  2: Player 2's token
-function Cell() {
-  let value = '';
-
-  // Accept a player's token to change the value of the cell
-  const addToken = (player) => {
-    value = player;
-  };
-
-  // How we will retrieve the current value of this cell through closure
-  const getValue = () => value;
-
-  return {
-    addToken,
-    getValue,
-  };
-}
-
-
-//  The GameController IEFE will be responsible for controlling the 
-//  flow and state of the game's turns, as well as whether
-//  anybody has won the game
 
 function GameController(
   playerOneName = "Player One",
   playerTwoName = "Player Two"
 ) {
+
+  // creates a board for the current game and give getBoard, addToken and 
+  // printBoard(to be removed when UI is done) methods
   const board = Gameboard();
 
   const players = [
     {
       name: playerOneName,
-      token: 'x'
+      token: 'x',
+
     },
     {
       name: playerTwoName,
@@ -89,15 +85,17 @@ function GameController(
 
   const getActivePlayer = () => activePlayer;
 
+  // to be removed when UI is done
   const printNewRound = () => {
     board.printBoard();
     console.log(`${getActivePlayer().name}'s turn.`);
   };
 
+  
   const playRound = (row, column) => {
 
     // add tokens if the move is valid then switch player.
-    const validMove = board.selectCell(row, column, getActivePlayer().token);
+    const validMove = board.addToken(row, column, getActivePlayer().token);
     if (validMove) {
       switchPlayerTurn();
     }
@@ -157,9 +155,6 @@ function GameController(
     if (emptyCount == 0) {
       console.log("tie")
     }
-    //  const availableCells = testBoard.filter((row) => row[column].getValue() === '').map(row => row[column]);
-    //  console.log(availableCells.length)
-
 
     printNewRound();
   };
@@ -177,6 +172,7 @@ function GameController(
 };
 
 function ScreenController() {
+
   const game = GameController();
   const playerTurnDiv = document.querySelector('.turn');
   const boardDiv = document.querySelector('.board');
@@ -184,7 +180,7 @@ function ScreenController() {
   const updateScreen = () => {
     // clear the board
     boardDiv.textContent = "";
-
+    
     // get the newest version of the board and player turn
     const board = game.getBoard();
     const activePlayer = game.getActivePlayer();
@@ -199,7 +195,7 @@ function ScreenController() {
         // Anything clickable should be a button!!
         const cellButton = document.createElement("button");
         cellButton.classList.add("cell");
-        // Create a data attribute to identify the column
+        // Create a data attribute to identify the column and row
         // This makes it easier to pass into our `playRound` function 
         cellButton.dataset.column = index;
         cellButton.dataset.row = i;
@@ -207,13 +203,13 @@ function ScreenController() {
           i++;
         }
 
-        
-        
         cellButton.textContent = cell.getValue();
         boardDiv.appendChild(cellButton);
+        
       })
     })
-  }
+
+}
 
   // Add event listener for the board
   function clickHandlerBoard(e) {
@@ -232,8 +228,7 @@ function ScreenController() {
 
   // delete html elements and call update screen again when a win or tie condition is met
   
-
   // We don't need to return anything from this module because everything is encapsulated inside this screen controller.
 }
 
-ScreenController();
+ScreenController()
