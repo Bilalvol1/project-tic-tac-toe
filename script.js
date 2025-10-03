@@ -68,8 +68,7 @@ function GameController(
   const players = [
     {
       name: playerOneName,
-      token: 'x',
-
+      token: 'x'
     },
     {
       name: playerTwoName,
@@ -96,14 +95,21 @@ function GameController(
 
     // add tokens if the move is valid then switch player.
     const validMove = board.addToken(row, column, getActivePlayer().token);
-    if (validMove) {
-      switchPlayerTurn();
-    }
+    
     
     /*  This is where we would check for a winner and handle that logic,
     such as a win message. */
 
     // get values of the board to do the comparison for win conditions
+    const winDialog = document.querySelector('#winDialog');
+    const announceWinner = document.querySelector('#announceWinner');
+    const restartBtn = document.querySelector('#restartBtn');
+
+    restartBtn.addEventListener("click", () => {
+    location.reload();
+    });
+
+
     const testBoard = board.getBoard();
     win = []
     for(i = 0; i < 3; i++) {
@@ -112,14 +118,30 @@ function GameController(
       }
     }
 
+        // tie
+    emptyCount = 0;
+    for ( let i = 0; i < win.length; i++ ) {
+      if( win[i] === '') {
+        emptyCount += 1;
+      }
+    }
+    if (emptyCount == 0) {
+      console.log("tie");
+      announceWinner.textContent = `Tie`
+      winDialog.showModal();
+    }
+
     // vertical 
     for( let i = 0; i <= 2; i++ ) {
       if (win[0 + i] + win[3 + i] + win[6 + i] === 'ooo') {
         console.log("win OOO!!!");
-        ScreenController();
+        announceWinner.textContent = `${getActivePlayer().name} wins`
+        winDialog.showModal();
       }
       if (win[0 + i] + win[3 + i] + win[6 + i] === 'xxx') {
         console.log("win XXX!!!");
+        announceWinner.textContent = `${getActivePlayer().name} wins`
+        winDialog.showModal();
       }
     }
 
@@ -127,9 +149,13 @@ function GameController(
     for( let i = 0, j = 0; i <= 2; i++ ) {
       if (win[0 + j] + win[1 + j] + win[2 + j] === 'ooo') {
         console.log("win OOO!!!");
+        announceWinner.textContent = `${getActivePlayer().name} wins`
+        winDialog.showModal();
       }
       if (win[0 + j] + win[1 + j] + win[2 + j] === 'xxx') {
         console.log("win XXX!!!");
+        announceWinner.textContent = `${getActivePlayer().name} wins`
+        winDialog.showModal();
       }
       j = j + 3;
     }
@@ -138,22 +164,21 @@ function GameController(
     for (let i = 0, j = 0; i <= 1; i++) {
       if ( win[0 + j] + win[4] + win[8 - j] === 'ooo') {
         console.log("cross win for OOO");
+        announceWinner.textContent = `${getActivePlayer().name} wins`
+        winDialog.showModal();
       }
       if ( win[0 + j] + win[4] + win[8 - j] === 'xxx') {
         console.log("cross win for XXX");
+        announceWinner.textContent = `${getActivePlayer().name} wins`
+        winDialog.showModal();
       }
       j = 6;
     }
 
-    // tie
-    emptyCount = 0;
-    for ( let i = 0; i < win.length; i++ ) {
-      if( win[i] === '') {
-        emptyCount += 1;
-      }
-    }
-    if (emptyCount == 0) {
-      console.log("tie")
+
+
+    if (validMove) {
+      switchPlayerTurn();
     }
 
     printNewRound();
@@ -161,6 +186,8 @@ function GameController(
 
   // Initial play game message
   printNewRound();
+
+  
 
   // For the console version, we will only use playRound, but we will need
   // getActivePlayer for the UI version, so I'm revealing it now
@@ -173,7 +200,13 @@ function GameController(
 
 function ScreenController() {
 
-  const game = GameController();
+  let game;
+  if(playerOne.value === '' || playerTwo === '') {
+    game = GameController()
+  } else {
+    game = GameController(playerOne.value, playerTwo.value);
+  }
+
   const playerTurnDiv = document.querySelector('.turn');
   const boardDiv = document.querySelector('.board');
 
@@ -231,4 +264,21 @@ function ScreenController() {
   // We don't need to return anything from this module because everything is encapsulated inside this screen controller.
 }
 
-ScreenController()
+const initGame = (function() {
+  const playerOne = document.querySelector('#playerOne');
+  const playerTwo = document.querySelector('#playerTwo');
+  const initialization = document.querySelector('#submitBtn');
+  const showBtn = document.querySelector('#showBtn')
+  const dialog = document.querySelector('dialog')
+
+  showBtn.addEventListener("click", () => {
+    dialog.showModal();
+});
+  
+  ScreenController();
+  
+  initialization.addEventListener("click", () => {
+    ScreenController();
+    dialog.close();
+  })
+})()

@@ -7,6 +7,28 @@
         <link rel="stylesheet" href="./style.css">
 </head>
 <body>
+    <button id="showBtn">Add names</button>
+    <dialog>
+        <form method="dialog">
+            <div>
+                <label for="playerOne">Player One name: </label>
+                <input type="text" id="playerOne">
+            </div>
+            <div>
+                <label for="playerTwo">Player Two name: </label>
+                <input type="text" id="playerTwo">
+            </div>
+            <div>
+                <button type='button' id="submitBtn">Start</button>
+            </div>
+        </form>
+    </dialog>
+    <dialog id="winDialog">
+        <div id="announceWinner"></div>
+        <div>
+            <button id="restartBtn">Restart</button>
+        </div>
+    </dialog>
     <div class="container">
      <h1 class="turn"></div>
      <div class="board"></div>
